@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "SSH FS - testauto",
+			"uri": "ssh://testauto/"
+		}
+	],
+	"settings": {}
+}
