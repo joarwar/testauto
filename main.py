@@ -129,10 +129,13 @@ def main():
         plt.xlabel("Tid (s)")
         plt.ylabel("Amplitude")
         plt.grid()
-        
+
         # Specify the save path directly
         save_path = 'images/signal_plot.png'  # Relative path to save the image
-        
+
+        # Print the save path for debugging
+        print(f"Saving plot to: {save_path}")
+
         # Save the figure
         plt.savefig(save_path, dpi=300)  # Save as PNG file with 300 dpi
         plt.close()  # Close the plot to free up memory
