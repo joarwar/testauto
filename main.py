@@ -98,6 +98,8 @@ def analysera(frekvens):
 # -------------------------------------------------------------
 # Huvudprogram
 # -------------------------------------------------------------
+import time
+
 def main():
     # Block 1: Initialisera
     try:
@@ -130,9 +132,10 @@ def main():
         plt.ylabel("Amplitude")
         plt.grid()
 
-        # Specify the save path directly
-        save_path = 'images/signal_plot.png'  # Relative path to save the image
-
+        # Generate a unique filename using the current timestamp
+        timestamp = time.strftime("%Y%m%d_%H%M%S")  # Format: YYYYMMDD_HHMMSS
+        save_path = f'/var/lib/jenkins/jobs/testauto/images/signal_plot_{timestamp}.png'  # Unique filename
+        
         # Print the save path for debugging
         print(f"Saving plot to: {save_path}")
 
