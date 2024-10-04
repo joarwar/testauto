@@ -97,7 +97,7 @@ def analysera(frekvens):
     print("\n--- Analysera data ---")
 
     # Kontrollera om frekvensen ligger inom ett förväntat intervall
-    if frekvens < 50 or frekvens > 60:
+    if frekvens < 50 or frekvens > 1000:
         print(
             "Varning: Frekvensen ligger utanför det förväntade intervallet (50-60 Hz)."
         )
