@@ -51,11 +51,10 @@ def mata(oscilloskop, kanal="CHANnel1"):
         oscilloskop.write(f":MEASure:FREQuency {kanal}")
         # query-kommando:
         frekvens = oscilloskop.query(f":MEASure:FREQuency? {kanal}")
+        return float(frekvens)
     except Exception as e:
         print(f"Misslyckades med att mäta frekvens på {kanal}: {e}")
-
-    # Returnera den uppmätta frekvensen
-    return float(frekvens)
+        return None
 
 
 # -------------------------------------------------------------
@@ -90,19 +89,10 @@ def hamta_signal(oscilloskop, kanal="CHANnel1"):
 # -------------------------------------------------------------
 # Block 4: Analysera
 # -------------------------------------------------------------
-
-
 def analysera(frekvens):
     # Analysera den uppmätta frekvensen
     print("\n--- Analysera data ---")
-
-    # Kontrollera om frekvensen ligger inom ett förväntat intervall
-    if frekvens < 50 or frekvens > 1000:
-        print(
-            "Varning: Frekvensen ligger utanför det förväntade intervallet (50-60 Hz)."
-        )
-    else:
-        print(f"Frekvensen ligger inom förväntat intervall: {frekvens} Hz")
+    print(f"Uppmätt frekvens: {frekvens} Hz")
 
 
 # -------------------------------------------------------------
@@ -119,9 +109,10 @@ def main():
     for i in range(3):
         # Block 2: Mätning
         try:
-            kanal = "CHANnel1"  # Kan justeras beroende på vilken kanal du vill mäta från
-            frekvens = mata(oscilloskop, kanal=kanal)
-            frekvens_lista.append(frekvens)
+            kanal = "CHANnel1"  # Specifik kanal 1
+            frekvens = mata(oscilloskop, kanal=kanal)  # Använd kanal 1 för frekvensmätning
+            if frekvens is not None:
+                frekvens_lista.append(frekvens)
         except Exception as e:
             print(f"Mätning misslyckades: {e}")
             return
@@ -144,7 +135,8 @@ def main():
         plt.close()  # Close the plot to free up memory
 
     # Block 4: Analysera
-    analysera(frekvens)
+    if frekvens is not None:
+        analysera(frekvens)
 
     # Stäng anslutningen till oscilloskopet
     oscilloskop.close()
