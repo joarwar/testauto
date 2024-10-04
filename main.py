@@ -1,8 +1,8 @@
 # -------------------------------------------------------------
 # Importera bibliotek
 # -------------------------------------------------------------
-import time
 import pyvisa
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -69,7 +69,9 @@ def hamta_signal(oscilloskop, kanal="CHANnel1"):
 
         # Hämta waveform-data
         data = oscilloskop.query(":WAVeform:DATA?")
-        signal = np.array(data.split(','), dtype=float)
+        
+        # Clean the data string by removing unwanted characters
+        signal = np.array([float(point) for point in data.split() if point.replace('.', '', 1).replace('-', '', 1).isdigit()])
 
         # Hämta tidsbasen
         x_increment = float(oscilloskop.query(":WAVeform:XINCrement?"))
