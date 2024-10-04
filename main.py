@@ -5,6 +5,8 @@ import pyvisa
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import shutil  # Import shutil for file operations
+from datetime import datetime  # For unique timestamp generation
 
 # -------------------------------------------------------------
 # Block 1: Initialisera
@@ -38,22 +40,19 @@ def initialisera():
 
     return oscilloskop
 
-
 # -------------------------------------------------------------
 # Block 2: Mätning
 # -------------------------------------------------------------
+
 def mata(oscilloskop, kanal="CHANnel1"):
     # Mät frekvensen från en specifik kanal på oscilloskopets mätfunktion
     try:
-        # set-kommando: specifik kanal
         oscilloskop.write(f":MEASure:FREQuency {kanal}")
-        # query-kommando:
         frekvens = oscilloskop.query(f":MEASure:FREQuency? {kanal}")
         return float(frekvens)
     except Exception as e:
         print(f"Misslyckades med att mäta frekvens på {kanal}: {e}")
         return None
-
 
 # -------------------------------------------------------------
 # Block 3: Hämta signaldata
@@ -61,13 +60,13 @@ def mata(oscilloskop, kanal="CHANnel1"):
 def hamta_signal(oscilloskop, kanal="CHANnel1"):
     # Hämta signaldata från den specifika kanalen
     try:
-        oscilloskop.write(f":WAVeform:FORMat ASCii")  # Sätt formatet till ASCII
-        oscilloskop.write(f":WAVeform:SOURCE {kanal}")  # Välj kanal
+        oscilloskop.write(f":WAVeform:FORMat ASCii")
+        oscilloskop.write(f":WAVeform:SOURCE {kanal}")
 
         # Hämta waveform-data
         data = oscilloskop.query(":WAVeform:DATA?")
         
-        # Rensa data-strängen genom att ta bort oönskade tecken
+        # Clean the data string by removing unwanted characters
         signal = np.array([float(point) for point in data.split() if point.replace('.', '', 1).replace('-', '', 1).isdigit()])
 
         # Hämta tidsbasen
@@ -83,7 +82,6 @@ def hamta_signal(oscilloskop, kanal="CHANnel1"):
         print(f"Misslyckades med att hämta signal: {e}")
         return None, None
 
-
 # -------------------------------------------------------------
 # Block 4: Analysera
 # -------------------------------------------------------------
@@ -91,7 +89,6 @@ def analysera(frekvens):
     # Analysera den uppmätta frekvensen
     print("\n--- Analysera data ---")
     print(f"Uppmätt frekvens: {frekvens} Hz")
-
 
 # -------------------------------------------------------------
 # Huvudprogram
@@ -108,7 +105,7 @@ def main():
         # Block 2: Mätning
         try:
             kanal = "CHANnel1"  # Specifik kanal 1
-            frekvens = mata(oscilloskop, kanal=kanal)  # Använd kanal 1 för frekvensmätning
+            frekvens = mata(oscilloskop, kanal=kanal)
             if frekvens is not None:
                 frekvens_lista.append(frekvens)
         except Exception as e:
@@ -128,20 +125,26 @@ def main():
         plt.ylabel("Amplitude")
         plt.grid()
 
-        # Generera ett unikt filnamn med nuvarande tidsstämpel
-        timestamp = time.strftime("%Y%m%d_%H%M%S")  # Format: YYYYMMDD_HHMMSS
-        save_path = f'/var/lib/jenkins/jobs/testauto/images/signal_plot_{timestamp}.png'  # Unikt filnamn
+        # Generate a unique filename using the current timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # Format: YYYYMMDD_HHMMSS
+        save_path = f'/var/lib/jenkins/jobs/testauto/images/signal_plot_{timestamp}.png'  # Unique filename
 
-        # Skriv ut spara sökväg för debugging
-        print(f"Sparar plot till: {save_path}")
+        # Print the save path for debugging
+        print(f"Saving plot to: {save_path}")
 
-        # Försök spara figuren
+        # Attempt to save the figure
         try:
-            plt.savefig(save_path, dpi=300)  # Spara som PNG-fil med 300 dpi
-            print(f"Plot sparad framgångsrikt till: {save_path}")
+            plt.savefig(save_path, dpi=300)  # Save as PNG file with 300 dpi
+            print(f"Plot saved successfully to: {save_path}")
+
+            # Move the saved image to the specified directory
+            target_path = f'C:\\Users\\joarw\\PLOTTAR\\signal_plot_{timestamp}.png'  # Define target path
+            shutil.move(save_path, target_path)  # Move the image to the target path
+            print(f"Image moved to PLOTTAR folder: {target_path}")
         except Exception as e:
-            print(f"Misslyckades med att spara plot: {e}")
-        plt.close()  # Stäng plotten för att frigöra minne
+            print(f"Failed to save or move plot: {e}")
+
+        plt.close()  # Close the plot to free up memory
 
     # Block 4: Analysera
     if frekvens is not None:
@@ -149,7 +152,6 @@ def main():
 
     # Stäng anslutningen till oscilloskopet
     oscilloskop.close()
-
 
 if __name__ == "__main__":
     main()
