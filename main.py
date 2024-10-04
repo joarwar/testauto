@@ -5,6 +5,7 @@ import pyvisa
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 # -------------------------------------------------------------
 # Block 1: Initialisera
@@ -98,8 +99,6 @@ def analysera(frekvens):
 # -------------------------------------------------------------
 # Huvudprogram
 # -------------------------------------------------------------
-import time
-
 def main():
     # Block 1: Initialisera
     try:
@@ -135,12 +134,16 @@ def main():
         # Generate a unique filename using the current timestamp
         timestamp = time.strftime("%Y%m%d_%H%M%S")  # Format: YYYYMMDD_HHMMSS
         save_path = f'/var/lib/jenkins/jobs/testauto/images/signal_plot_{timestamp}.png'  # Unique filename
-        
+
         # Print the save path for debugging
         print(f"Saving plot to: {save_path}")
 
-        # Save the figure
-        plt.savefig(save_path, dpi=300)  # Save as PNG file with 300 dpi
+        # Attempt to save the figure
+        try:
+            plt.savefig(save_path, dpi=300)  # Save as PNG file with 300 dpi
+            print(f"Plot saved successfully to: {save_path}")
+        except Exception as e:
+            print(f"Failed to save plot: {e}")
         plt.close()  # Close the plot to free up memory
 
     # Block 4: Analysera
