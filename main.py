@@ -5,7 +5,6 @@ import pyvisa
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-import os
 
 # -------------------------------------------------------------
 # Block 1: Initialisera
@@ -43,8 +42,6 @@ def initialisera():
 # -------------------------------------------------------------
 # Block 2: Mätning
 # -------------------------------------------------------------
-
-
 def mata(oscilloskop, kanal="CHANnel1"):
     # Mät frekvensen från en specifik kanal på oscilloskopets mätfunktion
     try:
@@ -70,7 +67,7 @@ def hamta_signal(oscilloskop, kanal="CHANnel1"):
         # Hämta waveform-data
         data = oscilloskop.query(":WAVeform:DATA?")
         
-        # Clean the data string by removing unwanted characters
+        # Rensa data-strängen genom att ta bort oönskade tecken
         signal = np.array([float(point) for point in data.split() if point.replace('.', '', 1).replace('-', '', 1).isdigit()])
 
         # Hämta tidsbasen
@@ -131,20 +128,20 @@ def main():
         plt.ylabel("Amplitude")
         plt.grid()
 
-        # Generate a unique filename using the current timestamp
+        # Generera ett unikt filnamn med nuvarande tidsstämpel
         timestamp = time.strftime("%Y%m%d_%H%M%S")  # Format: YYYYMMDD_HHMMSS
-        save_path = f'/var/lib/jenkins/jobs/testauto/images/signal_plot_{timestamp}.png'  # Unique filename
+        save_path = f'/var/lib/jenkins/jobs/testauto/images/signal_plot_{timestamp}.png'  # Unikt filnamn
 
-        # Print the save path for debugging
-        print(f"Saving plot to: {save_path}")
+        # Skriv ut spara sökväg för debugging
+        print(f"Sparar plot till: {save_path}")
 
-        # Attempt to save the figure
+        # Försök spara figuren
         try:
-            plt.savefig(save_path, dpi=300)  # Save as PNG file with 300 dpi
-            print(f"Plot saved successfully to: {save_path}")
+            plt.savefig(save_path, dpi=300)  # Spara som PNG-fil med 300 dpi
+            print(f"Plot sparad framgångsrikt till: {save_path}")
         except Exception as e:
-            print(f"Failed to save plot: {e}")
-        plt.close()  # Close the plot to free up memory
+            print(f"Misslyckades med att spara plot: {e}")
+        plt.close()  # Stäng plotten för att frigöra minne
 
     # Block 4: Analysera
     if frekvens is not None:
@@ -152,3 +149,7 @@ def main():
 
     # Stäng anslutningen till oscilloskopet
     oscilloskop.close()
+
+
+if __name__ == "__main__":
+    main()
