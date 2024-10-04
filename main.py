@@ -1,16 +1,4 @@
 # -------------------------------------------------------------
-# Programskelett och kod för att mäta frekvens med oscilloskop.
-# Koden mäter frekvens och kontrolelrar om den ligger inom ett
-# visst intervall. Resultat skrivs till terminal.
-# Yrgo, 2024-09-27
-# Henrik Hallenberg
-# Kod genererad med ChatGPT4o
-#
-# OBS! Kod/kommentarer är på svenska, vilket bör undvikas!
-# -------------------------------------------------------------
-
-
-# -------------------------------------------------------------
 # Importera bibliotek
 # -------------------------------------------------------------
 import pyvisa
@@ -36,7 +24,6 @@ def initialisera():
         raise ValueError("Inga resurser hittades. Kontrollera anslutningen.")
 
     # Anslut till första resurser i listan, eller specificera rätt adress om flera finns
-    # OBS! Instrumentadressen kan förstås hårdkodas med sin adress
     instrument_adress = resurser[0]
     oscilloskop = rm.open_resource(instrument_adress)
 
@@ -48,10 +35,6 @@ def initialisera():
     oscilloskop.timeout = 5000
     oscilloskop.write_termination = "\n"
     oscilloskop.read_termination = "\n"
-
-    # Ofta behövs mer kod för att ställa in instrumentet inför mätning.
-    # Exempel på ytterligare inställningar för oscilloskop är trig, kanal, tidsbas, ...
-    # VIssa av dessa inställningar kan göras här, men man kan också behöva justera under mätningen.
 
     return oscilloskop
 
@@ -68,7 +51,6 @@ def mata(oscilloskop, kanal="CHANnel1"):
         oscilloskop.write(f":MEASure:FREQuency {kanal}")
         # query-kommando:
         frekvens = oscilloskop.query(f":MEASure:FREQuency? {kanal}")
-        #print(f"Frekvens på {kanal}: {frekvens} Hz")
     except Exception as e:
         print(f"Misslyckades med att mäta frekvens på {kanal}: {e}")
 
@@ -77,7 +59,34 @@ def mata(oscilloskop, kanal="CHANnel1"):
 
 
 # -------------------------------------------------------------
-# Block 3: Analysera
+# Block 3: Hämta signaldata
+# -------------------------------------------------------------
+def hamta_signal(oscilloskop, kanal="CHANnel1"):
+    # Hämta signaldata från den specifika kanalen
+    try:
+        oscilloskop.write(f":WAVeform:FORMat ASCii")  # Sätt formatet till ASCII
+        oscilloskop.write(f":WAVeform:SOURCE {kanal}")  # Välj kanal
+
+        # Hämta waveform-data
+        data = oscilloskop.query(":WAVeform:DATA?")
+        signal = np.array(data.split(','), dtype=float)
+
+        # Hämta tidsbasen
+        x_increment = float(oscilloskop.query(":WAVeform:XINCrement?"))
+        x_origin = float(oscilloskop.query(":WAVeform:XORigin?"))
+        num_points = len(signal)
+
+        # Generera x-värden baserat på tidsbasen
+        time_array = np.arange(num_points) * x_increment + x_origin
+
+        return time_array, signal
+    except Exception as e:
+        print(f"Misslyckades med att hämta signal: {e}")
+        return None, None
+
+
+# -------------------------------------------------------------
+# Block 4: Analysera
 # -------------------------------------------------------------
 
 
@@ -93,6 +102,7 @@ def analysera(frekvens):
     else:
         print(f"Frekvensen ligger inom förväntat intervall: {frekvens} Hz")
 
+
 # -------------------------------------------------------------
 # Huvudprogram
 # -------------------------------------------------------------
@@ -107,18 +117,31 @@ def main():
     for i in range(3):
         # Block 2: Mätning
         try:
-            # Ange kanal (t.ex., "CHANnel1", "CHANnel2", etc.)
             kanal = "CHANnel1"  # Kan justeras beroende på vilken kanal du vill mäta från
             frekvens = mata(oscilloskop, kanal=kanal)
+            frekvens_lista.append(frekvens)
         except Exception as e:
             print(f"Mätning misslyckades: {e}")
             return
         time.sleep(1)
-        
-        frekvens_lista.append(frekvens)
+
     print(frekvens_lista)
 
-    # Block 3: Analysera
+    # Block 3: Hämta och spara signal som bild
+    time_array, signal = hamta_signal(oscilloskop, kanal)
+    if signal is not None:
+        plt.figure()
+        plt.plot(time_array, signal)
+        plt.title(f"Signal från {kanal}")
+        plt.xlabel("Tid (s)")
+        plt.ylabel("Amplitude")
+        plt.grid()
+        
+        # Save the figure instead of displaying it
+        plt.savefig('signal_plot.png', dpi=300)  # Save as PNG file with 300 dpi
+        plt.close()  # Close the plot to free up memory
+
+    # Block 4: Analysera
     analysera(frekvens)
 
     # Stäng anslutningen till oscilloskopet
