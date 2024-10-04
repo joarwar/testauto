@@ -130,8 +130,11 @@ def main():
         plt.ylabel("Amplitude")
         plt.grid()
         
-        # Save the figure instead of displaying it
-        plt.savefig('signal_plot.png', dpi=300)  # Save as PNG file with 300 dpi
+        # Specify the save path directly
+        save_path = 'images/signal_plot.png'  # Relative path to save the image
+        
+        # Save the figure
+        plt.savefig(save_path, dpi=300)  # Save as PNG file with 300 dpi
         plt.close()  # Close the plot to free up memory
 
     # Block 4: Analysera
@@ -140,6 +143,3 @@ def main():
 
     # Stäng anslutningen till oscilloskopet
     oscilloskop.close()
-
-if __name__ == "__main__":
-    main()
