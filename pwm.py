@@ -15,7 +15,7 @@ try:
             # Calculate the sine value and convert it to duty cycle (0-100%)
             duty = (math.sin(math.radians(angle)) + 1) * 50  # Scale to 0-100%
             pi_pwm.ChangeDutyCycle(duty)  # Set the PWM duty cycle
-            sleep(0.00027778)  # Sleep for approximately 0.27778 ms for 5 degrees
+            sleep(0.000027778)  # Sleep for approximately 0.27778 ms for 5 degrees
 except KeyboardInterrupt:
     pass  # Exit the loop if interrupted
 
