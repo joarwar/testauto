@@ -75,7 +75,14 @@ def fetch_signal(oscilloscope, channel):
             print(f"Data received from {channel}: {data[:100]}...")  # Print first 100 characters for debugging
 
         # Clean up the data string by removing unwanted characters
-        signal = np.array([float(point) for point in data.split() if point.replace('.', '', 1).replace('-', '', 1).isdigit()])
+        signal_data = data.split()
+
+        # Check if the first element is a metadata header, and skip it if so
+        if signal_data[0].startswith('#'):
+            signal_data = signal_data[1:]  # Ignore the first element
+
+        # Convert remaining parts to floats
+        signal = np.array([float(point) for point in signal_data if point.replace('.', '', 1).replace('-', '', 1).isdigit()])
 
         if len(signal) == 0:
             print(f"Parsed signal is empty for {channel}")
@@ -105,6 +112,9 @@ def create_folder():
     # Create the folder if it doesn't already exist
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
+        print(f"Created folder: {folder_name}")  # Debugging line
+    else:
+        print(f"Folder already exists: {folder_name}")  # Debugging line
 
     return folder_name
 
@@ -123,24 +133,26 @@ def main():
     # Create a folder to save the images
     folder_path = create_folder()
 
-    # Block 2: Measure frequency for both channels
+    # Define channels to measure
     channels = ["CHANnel1", "CHANnel2"]
-    
+
+    # Block 2: Measure frequency and save to list
     for channel in channels:
         try:
-            frequency = measure(oscilloscope, channel)  # Measure frequency for the current channel
+            frequency = measure(oscilloscope, channel)  # Use specific channel for frequency measurement
             if frequency is not None:
                 frequency_list.append(frequency)
-                print(f"Measured frequency on {channel}: {frequency} Hz")
         except Exception as e:
-            print(f"Measurement failed on {channel}: {e}")
+            print(f"Measurement failed: {e}")
+            return
+        time.sleep(1)
 
     print(f"Frequencies measured: {frequency_list}")
 
-    # Block 3: Fetch and save signals for both channels
+    # Block 3: Fetch and save signals for each channel
     for channel in channels:
         time_array, signal = fetch_signal(oscilloscope, channel)
-        if signal is not None:
+        if signal is not None and len(signal) > 0:
             plt.figure()
             plt.plot(time_array, signal)
             plt.title(f"Signal from {channel}")
@@ -148,13 +160,18 @@ def main():
             plt.ylabel("Amplitude")
             plt.grid()
 
-            # Save plot for the respective channel
-            save_path = os.path.join(folder_path, f'{channel}_plot_{time.strftime("%Y%m%d_%H%M")}.png')
-            plt.savefig(save_path, dpi=300)
-            print(f"Plot saved for {channel} at: {save_path}")
+            # Save plot for each channel
+            save_path = os.path.join(folder_path, f'plot_{channel}_{time.strftime("%Y%m%d_%H%M")}.png')
+            try:
+                plt.savefig(save_path, dpi=300)
+                print(f"Plot saved to: {save_path}")
+            except Exception as e:
+                print(f"Failed to save plot for {channel}: {e}")
             plt.close()
+        else:
+            print(f"No valid signal data for {channel}.")
 
-    # Block 4: Close the connection to the oscilloscope
+    # Block 5: Close the connection to the oscilloscope
     oscilloscope.close()
 
 
