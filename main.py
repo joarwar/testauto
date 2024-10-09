@@ -95,6 +95,17 @@ def fetch_signal(oscilloscope, channel):
             print(f"Parsed signal is empty for {channel}")
             return None, None
 
+        # Check if channel is CHANnel1
+        if channel == "CHANnel1":
+            unique_values = np.unique(signal)
+            print(f"Unique values for {channel}: {unique_values}")
+
+            # Check if all points are equal
+            if len(unique_values) == 1:
+                print(f"All points in {channel} are equal to {unique_values[0]}")
+            else:
+                print(f"Not all points in {channel} are equal. Number of unique values: {len(unique_values)}")
+
         # Fetch the time base
         x_increment = float(oscilloscope.query(":WAVeform:XINCrement?"))
         x_origin = float(oscilloscope.query(":WAVeform:XORigin?"))
