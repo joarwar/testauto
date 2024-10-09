@@ -1,6 +1,9 @@
 # -------------------------------------------------------------
 # Import libraries
 # -------------------------------------------------------------
+import RPi.GPIO as GPIO
+from time import sleep
+import math
 import pyvisa
 import time
 import os  # To create the folder
@@ -24,7 +27,7 @@ def initialize():
     if not resources:
         raise ValueError("No resources found. Check the connection.")
 
-    # Connect to the first resource in the list, or specify the correct address if multiple are available
+    # Connect to the first resource in the list
     instrument_address = resources[0]
     oscilloscope = rm.open_resource(instrument_address)
 
@@ -67,7 +70,7 @@ def fetch_signal(oscilloscope, channel="CHANnel1"):
 
         # Fetch waveform data
         data = oscilloscope.query(":WAVeform:DATA?")
-        
+
         # Clean up the data string by removing unwanted characters
         signal = np.array([float(point) for point in data.split() if point.replace('.', '', 1).replace('-', '', 1).isdigit()])
 
@@ -77,7 +80,7 @@ def fetch_signal(oscilloscope, channel="CHANnel1"):
         num_points = len(signal)
 
         # Generate x-values based on the time base
-        time_array = np.arange(num_points) * x_increment + x_origin
+        time_array = np.linspace(0, num_points * x_increment, num_points) + x_origin
 
         return time_array, signal
     except Exception as e:
@@ -100,11 +103,11 @@ def analyze(frequency):
 def create_folder():
     timestamp = time.strftime("%Y%m%d_%H%M")  # Format: YYYYMMDD_HHMM
     folder_name = f'/var/lib/jenkins/jobs/testauto/images/signal_data_{timestamp}'
-    
+
     # Create the folder if it doesn't already exist
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
-    
+
     return folder_name
 
 
@@ -121,6 +124,35 @@ def main():
 
     # Create a folder to save the images
     folder_path = create_folder()
+
+    # -------------------------------------------------------------
+    # Block 2: PWM Generation
+    # -------------------------------------------------------------
+    ledpin = 12  # PWM pin connected to LED
+    GPIO.setwarnings(False)  # Disable warnings
+    GPIO.setmode(GPIO.BOARD)  # Set pin numbering system
+    GPIO.setup(ledpin, GPIO.OUT)
+    pi_pwm = GPIO.PWM(ledpin, 2000)  # Create PWM instance with frequency
+    pi_pwm.start(0)  # Start PWM with required Duty Cycle
+
+    try:
+        # Generate PWM signal for a set duration
+        for x in range(1000):
+            for angle in range(0, 360, 5):  # Loop through angles from 0 to 360 degrees in 5-degree increments
+                # Calculate the sine value and convert it to duty cycle (0-100%)
+                duty = (math.sin(math.radians(angle)) + 1) * 50  # Scale to 0-100%
+                pi_pwm.ChangeDutyCycle(duty)  # Set the PWM duty cycle
+                sleep(0.000027778)  # Sleep for approximately 0.27778 ms for 5 degrees
+
+        # Add a delay to ensure the PWM signal stabilizes
+        sleep(1)  # Wait for a second before fetching the signal
+
+    except KeyboardInterrupt:
+        pass  # Exit the loop if interrupted
+
+    finally:
+        pi_pwm.stop()  # Stop PWM
+        GPIO.cleanup()  # Clean up GPIO settings
 
     # Block 2: Measure frequency and save to list
     for i in range(3):
