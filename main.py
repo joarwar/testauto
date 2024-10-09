@@ -81,10 +81,12 @@ def fetch_signal(oscilloscope, channel):
         if signal_data[0].startswith('#'):
             signal_data = signal_data[1:]  # Ignore the first element
 
+        # Remove any unwanted characters from each point, such as commas
+        cleaned_signal_data = [point.strip().rstrip(',') for point in signal_data]
+
         # Convert remaining parts to floats
-        # This includes additional checks for float conversion
         try:
-            signal = np.array([float(point) for point in signal_data])
+            signal = np.array([float(point) for point in cleaned_signal_data])
         except ValueError as e:
             print(f"Error converting signal data to float for {channel}: {e}")
             return None, None
