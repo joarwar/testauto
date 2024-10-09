@@ -7,6 +7,15 @@ Password:	joarpeter
 
 ----------------------------------------------------------------
 
+RBPi
+
+ssh jope@Yrgo-15
+pwd: joarpeter
+
+Yrgo-15.local:
+192.168.68.105
+
+----------------------------------------------------------------
 Inför presentation:
 
 Punkter att ta upp på presentation...
