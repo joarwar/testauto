@@ -43,7 +43,7 @@ def initialize():
 # -------------------------------------------------------------
 # Block 2: Measurement
 # -------------------------------------------------------------
-def measure(oscilloscope, channel="CHANnel1"):
+def measure(oscilloscope, channel):
     # Measure the frequency from a specific channel using the oscilloscope's measurement function
     try:
         # Set command: specific channel
@@ -59,7 +59,7 @@ def measure(oscilloscope, channel="CHANnel1"):
 # -------------------------------------------------------------
 # Block 3: Fetch signal data
 # -------------------------------------------------------------
-def fetch_signal(oscilloscope, channel="CHANnel1"):
+def fetch_signal(oscilloscope, channel):
     # Fetch signal data from the specified channel
     try:
         oscilloscope.write(f":WAVeform:FORMat ASCii")  # Set format to ASCII
@@ -96,15 +96,6 @@ def fetch_signal(oscilloscope, channel="CHANnel1"):
 
 
 # -------------------------------------------------------------
-# Block 4: Analyze
-# -------------------------------------------------------------
-def analyze(frequency):
-    # Analyze the measured frequency
-    print("\n--- Analyze data ---")
-    print(f"Measured frequency: {frequency} Hz")
-
-
-# -------------------------------------------------------------
 # Create dynamic folder
 # -------------------------------------------------------------
 def create_folder():
@@ -132,53 +123,38 @@ def main():
     # Create a folder to save the images
     folder_path = create_folder()
 
-    # Block 2: Measure frequency and save to list
-    for i in range(3):
+    # Block 2: Measure frequency for both channels
+    channels = ["CHANnel1", "CHANnel2"]
+    
+    for channel in channels:
         try:
-            channel = "CHANnel1"  # Specific channel 1
-            frequency = measure(oscilloscope, channel)  # Use channel 1 for frequency measurement
+            frequency = measure(oscilloscope, channel)  # Measure frequency for the current channel
             if frequency is not None:
                 frequency_list.append(frequency)
+                print(f"Measured frequency on {channel}: {frequency} Hz")
         except Exception as e:
-            print(f"Measurement failed: {e}")
-            return
-        time.sleep(1)
+            print(f"Measurement failed on {channel}: {e}")
 
-    print(frequency_list)
+    print(f"Frequencies measured: {frequency_list}")
 
-    # Block 3: Fetch and save signal from channel 1 (sine wave)
-    time_array_channel1, signal_channel1 = fetch_signal(oscilloscope, "CHANnel1")
-    if signal_channel1 is not None:
-        plt.figure()
-        plt.plot(time_array_channel1, signal_channel1)
-        plt.title("Sine wave from Channel 1")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Amplitude")
-        plt.grid()
+    # Block 3: Fetch and save signals for both channels
+    for channel in channels:
+        time_array, signal = fetch_signal(oscilloscope, channel)
+        if signal is not None:
+            plt.figure()
+            plt.plot(time_array, signal)
+            plt.title(f"Signal from {channel}")
+            plt.xlabel("Time (s)")
+            plt.ylabel("Amplitude")
+            plt.grid()
 
-        # Save plot for channel 1
-        save_path_channel1 = os.path.join(folder_path, f'sine_plot_{time.strftime("%Y%m%d_%H%M")}.png')
-        plt.savefig(save_path_channel1, dpi=300)
-        print(f"Sine plot saved to: {save_path_channel1}")
-        plt.close()
+            # Save plot for the respective channel
+            save_path = os.path.join(folder_path, f'{channel}_plot_{time.strftime("%Y%m%d_%H%M")}.png')
+            plt.savefig(save_path, dpi=300)
+            print(f"Plot saved for {channel} at: {save_path}")
+            plt.close()
 
-    # Block 3: Fetch and save signal from channel 2 (PWM signal)
-    time_array_channel2, signal_channel2 = fetch_signal(oscilloscope, "CHANnel2")
-    if signal_channel2 is not None:
-        plt.figure()
-        plt.plot(time_array_channel2, signal_channel2)
-        plt.title("PWM signal from Channel 2")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Amplitude")
-        plt.grid()
-
-        # Save plot for channel 2
-        save_path_channel2 = os.path.join(folder_path, f'pwm_plot_{time.strftime("%Y%m%d_%H%M")}.png')
-        plt.savefig(save_path_channel2, dpi=300)
-        print(f"PWM plot saved to: {save_path_channel2}")
-        plt.close()
-
-    # Block 5: Close the connection to the oscilloscope
+    # Block 4: Close the connection to the oscilloscope
     oscilloscope.close()
 
 
