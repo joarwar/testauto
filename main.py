@@ -95,12 +95,11 @@ def fetch_signal(oscilloscope, channel):
 
         # If channel is CHANnel1, perform sine wave analysis
         if channel == "CHANnel1":
-            total_sum = np.sum(signal)
             average = np.mean(signal)  # Calculate the average to check for DC offset
+            total_sum = np.sum(signal)
             print(f"The sum of all points in {channel} is: {total_sum}")
             print(f"The average of all points in {channel} is: {average}")
             sum_sinus_number = average - average
-            print(f"The sum of the sinus is {sum_sinus_number} after removing the DC offset.")
             # Analyze if the sine wave is good based on the average value
             if abs(average) < 0.1:  # Set a tolerance level for offset
                 print(f"{channel} signal appears to be centered around zero, indicating a good sine wave.")
