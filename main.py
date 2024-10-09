@@ -93,15 +93,10 @@ def fetch_signal(oscilloscope, channel):
             print(f"Parsed signal is empty for {channel}")
             return None, None
 
-        # Check if channel is CHANnel1
+        # If channel is CHANnel1, calculate the sum of all points
         if channel == "CHANnel1":
-            unique_values = np.unique(signal)
-
-            # Check if all points are equal
-            if len(unique_values) == 1:
-                print(f"All points in {channel} are equal to {unique_values[0]}")
-            else:
-                print(f"Not all points in {channel} are equal. Number of unique values: {len(unique_values)}")
+            total_sum = np.sum(signal)
+            print(f"The sum of all points in {channel} is: {total_sum}")
 
         # Fetch the time base
         x_increment = float(oscilloscope.query(":WAVeform:XINCrement?"))
