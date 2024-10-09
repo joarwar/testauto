@@ -109,7 +109,7 @@ def create_folder():
 # -------------------------------------------------------------
 def upload_to_drive(folder_path):
     # Define the rclone command to upload the folder to Google Drive
-    rclone_command = ['rclone', 'sync', folder_path, 'mydrive:']  # Adjust 'mydrive:' to your rclone remote name
+    rclone_command = ['rclone', 'sync', folder_path, 'images:']  # Adjust 'mydrive:' to your rclone remote name
 
     # Execute the rclone command
     try:
