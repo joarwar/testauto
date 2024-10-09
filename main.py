@@ -6,7 +6,6 @@ import time
 import os  # To create the folder
 import numpy as np
 import matplotlib.pyplot as plt
-import subprocess  # To call rclone
 
 # -------------------------------------------------------------
 # Block 1: Initialize
@@ -99,7 +98,7 @@ def analyze(frequency):
 # Create dynamic folder
 # -------------------------------------------------------------
 def create_folder():
-    timestamp = time.strftime("%Y%m%d_%H%M%S")  # Format: YYYYMMDD_HHMMSS
+    timestamp = time.strftime("%Y%m%d_%H%M")  # Format: YYYYMMDD_HHMM
     folder_name = f'/var/lib/jenkins/jobs/testauto/images/signal_data_{timestamp}'
     
     # Create the folder if it doesn't already exist
@@ -107,19 +106,6 @@ def create_folder():
         os.makedirs(folder_name)
     
     return folder_name
-
-
-# -------------------------------------------------------------
-# Upload to Google Drive using rclone
-# -------------------------------------------------------------
-def upload_to_drive(folder_path):
-    try:
-        # Command to sync the folder to Google Drive
-        command = ['rclone', 'sync', folder_path, 'images:']
-        subprocess.run(command, check=True)  # Ensure it raises an error if the command fails
-        print(f"Successfully uploaded {folder_path} to Google Drive.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error uploading to Google Drive: {e}")
 
 
 # -------------------------------------------------------------
@@ -140,7 +126,7 @@ def main():
     for i in range(3):
         try:
             channel = "CHANnel1"  # Specific channel 1
-            frequency = measure(oscilloscope, channel=channel)  # Use channel 1 for frequency measurement
+            frequency = measure(oscilloscope, channel)  # Use channel 1 for frequency measurement
             if frequency is not None:
                 frequency_list.append(frequency)
         except Exception as e:
@@ -161,7 +147,7 @@ def main():
         plt.grid()
 
         # Save plot for channel 1
-        save_path_channel1 = os.path.join(folder_path, f'sine_plot_{time.strftime("%Y%m%d_%H%M%S")}.png')
+        save_path_channel1 = os.path.join(folder_path, f'sine_plot_{time.strftime("%Y%m%d_%H%M")}.png')
         plt.savefig(save_path_channel1, dpi=300)
         print(f"Sine plot saved to: {save_path_channel1}")
         plt.close()
@@ -177,13 +163,10 @@ def main():
         plt.grid()
 
         # Save plot for channel 2
-        save_path_channel2 = os.path.join(folder_path, f'pwm_plot_{time.strftime("%Y%m%d_%H%M%S")}.png')
+        save_path_channel2 = os.path.join(folder_path, f'pwm_plot_{time.strftime("%Y%m%d_%H%M")}.png')
         plt.savefig(save_path_channel2, dpi=300)
         print(f"PWM plot saved to: {save_path_channel2}")
         plt.close()
-
-    # Block 4: Upload the created folder to Google Drive
-    upload_to_drive(folder_path)
 
     # Block 5: Close the connection to the oscilloscope
     oscilloscope.close()
