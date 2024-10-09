@@ -70,9 +70,19 @@ def fetch_signal(oscilloscope, channel="CHANnel1"):
 
         # Fetch waveform data
         data = oscilloscope.query(":WAVeform:DATA?")
+        
+        if not data:
+            print(f"No data received from {channel}.")
+            return None, None
+        else:
+            print(f"Data received from {channel}: {data[:100]}...")  # Print first 100 characters for debugging
 
         # Clean up the data string by removing unwanted characters
         signal = np.array([float(point) for point in data.split() if point.replace('.', '', 1).replace('-', '', 1).isdigit()])
+
+        if len(signal) == 0:
+            print(f"Parsed signal is empty for {channel}")
+            return None, None
 
         # Fetch the time base
         x_increment = float(oscilloscope.query(":WAVeform:XINCrement?"))
@@ -84,7 +94,7 @@ def fetch_signal(oscilloscope, channel="CHANnel1"):
 
         return time_array, signal
     except Exception as e:
-        print(f"Failed to fetch signal: {e}")
+        print(f"Failed to fetch signal from {channel}: {e}")
         return None, None
 
 
@@ -177,6 +187,9 @@ def main():
         plt.xlabel("Time (s)")
         plt.ylabel("Amplitude")
         plt.grid()
+        # Debug: Print the first few time and signal values
+        print("First few time values:", time_array_channel1[:5])
+        print("First few signal values:", signal_channel1[:5])
 
         # Save plot for channel 1
         save_path_channel1 = os.path.join(folder_path, f'sine_plot_{time.strftime("%Y%m%d_%H%M")}.png')
