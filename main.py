@@ -6,6 +6,7 @@ import time
 import os  # To create the folder
 import numpy as np
 import matplotlib.pyplot as plt
+import subprocess  # For running rclone commands
 
 # -------------------------------------------------------------
 # Block 1: Initialize
@@ -39,7 +40,6 @@ def initialize():
 
     return oscilloscope
 
-
 # -------------------------------------------------------------
 # Block 2: Measurement
 # -------------------------------------------------------------
@@ -54,7 +54,6 @@ def measure(oscilloscope, channel="CHANnel1"):
     except Exception as e:
         print(f"Failed to measure frequency on {channel}: {e}")
         return None
-
 
 # -------------------------------------------------------------
 # Block 3: Fetch signal data
@@ -84,7 +83,6 @@ def fetch_signal(oscilloscope, channel="CHANnel1"):
         print(f"Failed to fetch signal: {e}")
         return None, None
 
-
 # -------------------------------------------------------------
 # Block 4: Analyze
 # -------------------------------------------------------------
@@ -92,7 +90,6 @@ def analyze(frequency):
     # Analyze the measured frequency
     print("\n--- Analyze data ---")
     print(f"Measured frequency: {frequency} Hz")
-
 
 # -------------------------------------------------------------
 # Create dynamic folder
@@ -107,6 +104,19 @@ def create_folder():
     
     return folder_name
 
+# -------------------------------------------------------------
+# Upload to Google Drive using rclone
+# -------------------------------------------------------------
+def upload_to_drive(folder_path):
+    # Define the rclone command to upload the folder to Google Drive
+    rclone_command = ['rclone', 'sync', folder_path, 'mydrive:']  # Adjust 'mydrive:' to your rclone remote name
+
+    # Execute the rclone command
+    try:
+        subprocess.run(rclone_command, check=True)
+        print(f"Uploaded {folder_path} to Google Drive successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error uploading to Google Drive: {e}")
 
 # -------------------------------------------------------------
 # Main program
@@ -168,9 +178,11 @@ def main():
         print(f"PWM plot saved to: {save_path_channel2}")
         plt.close()
 
+    # Upload the folder to Google Drive
+    upload_to_drive(folder_path)
+
     # Block 4: Close the connection to the oscilloscope
     oscilloscope.close()
-
 
 if __name__ == "__main__":
     main()
