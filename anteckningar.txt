@@ -7,3 +7,23 @@ Password:	joarpeter
 
 ----------------------------------------------------------------
 
+Inför presentation:
+
+Punkter att ta upp på presentation...
+Viktiga punkter att ta upp i rapporten också!!!
+
+1. Kvaliten på sinusvågen
+        Bra / Dålig? Vad var ribban för dålig eller bra?
+2. Kan man se resultaten i Jenkins?
+        Hur går det till isåfall?
+        Vilka resultat kan man se i Jenkins?
+3. Vilken frekvens har vi nått?
+        Minimi 50 Hz
+            (vi har ca 160 Hz)
+4. Vilken PWM-frekvens har ni?
+        Vilken strategi för att generera PWM?
+        Vilken PWM-frekvens?
+5. Vad skulle ni vilja förbättra om ni hade haft mer tid?
+        Kan resultat spåras till rätt kod-version?
+6. Hur många kod-iterationer har ni kört?
+        
