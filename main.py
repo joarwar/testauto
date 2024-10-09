@@ -1,9 +1,6 @@
 # -------------------------------------------------------------
 # Import libraries
 # -------------------------------------------------------------
-import RPi.GPIO as GPIO
-from time import sleep
-import math
 import pyvisa
 import time
 import os  # To create the folder
@@ -70,7 +67,7 @@ def fetch_signal(oscilloscope, channel="CHANnel1"):
 
         # Fetch waveform data
         data = oscilloscope.query(":WAVeform:DATA?")
-        
+
         if not data:
             print(f"No data received from {channel}.")
             return None, None
@@ -135,35 +132,6 @@ def main():
     # Create a folder to save the images
     folder_path = create_folder()
 
-    # -------------------------------------------------------------
-    # Block 2: PWM Generation
-    # -------------------------------------------------------------
-    ledpin = 12  # PWM pin connected to LED
-    GPIO.setwarnings(False)  # Disable warnings
-    GPIO.setmode(GPIO.BOARD)  # Set pin numbering system
-    GPIO.setup(ledpin, GPIO.OUT)
-    pi_pwm = GPIO.PWM(ledpin, 2000)  # Create PWM instance with frequency
-    pi_pwm.start(0)  # Start PWM with required Duty Cycle
-
-    try:
-        # Generate PWM signal for a set duration
-        for x in range(1000):
-            for angle in range(0, 360, 5):  # Loop through angles from 0 to 360 degrees in 5-degree increments
-                # Calculate the sine value and convert it to duty cycle (0-100%)
-                duty = (math.sin(math.radians(angle)) + 1) * 50  # Scale to 0-100%
-                pi_pwm.ChangeDutyCycle(duty)  # Set the PWM duty cycle
-                sleep(0.000027778)  # Sleep for approximately 0.27778 ms for 5 degrees
-
-        # Add a delay to ensure the PWM signal stabilizes
-        sleep(1)  # Wait for a second before fetching the signal
-
-    except KeyboardInterrupt:
-        pass  # Exit the loop if interrupted
-
-    finally:
-        pi_pwm.stop()  # Stop PWM
-        GPIO.cleanup()  # Clean up GPIO settings
-
     # Block 2: Measure frequency and save to list
     for i in range(3):
         try:
@@ -187,9 +155,6 @@ def main():
         plt.xlabel("Time (s)")
         plt.ylabel("Amplitude")
         plt.grid()
-        # Debug: Print the first few time and signal values
-        print("First few time values:", time_array_channel1[:5])
-        print("First few signal values:", signal_channel1[:5])
 
         # Save plot for channel 1
         save_path_channel1 = os.path.join(folder_path, f'sine_plot_{time.strftime("%Y%m%d_%H%M")}.png')
