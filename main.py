@@ -1,154 +1,175 @@
 # -------------------------------------------------------------
-# Importera bibliotek
+# Import libraries
 # -------------------------------------------------------------
 import pyvisa
 import time
+import os  # To create the folder
 import numpy as np
 import matplotlib.pyplot as plt
 
 # -------------------------------------------------------------
-# Block 1: Initialisera
+# Block 1: Initialize
 # -------------------------------------------------------------
-frekvens_lista = []
+frequency_list = []
 
-def initialisera():
-    # Initialiserar anslutningen till oscilloskopet och returnerar instrumentobjektet
+def initialize():
+    # Initializes the connection to the oscilloscope and returns the instrument object
     rm = pyvisa.ResourceManager()
 
-    # Hämta alla tillgängliga resurser för att identifiera oscilloskopet anslutet via USB
-    resurser = rm.list_resources()
-    print("Tillgängliga resurser:", resurser)
+    # Fetch all available resources to identify the oscilloscope connected via USB
+    resources = rm.list_resources()
+    print("Available resources:", resources)
 
-    # Kontrollera att resurser finns
-    if not resurser:
-        raise ValueError("Inga resurser hittades. Kontrollera anslutningen.")
+    # Check that resources are available
+    if not resources:
+        raise ValueError("No resources found. Check the connection.")
 
-    # Anslut till första resurser i listan, eller specificera rätt adress om flera finns
-    instrument_adress = resurser[0]
-    oscilloskop = rm.open_resource(instrument_adress)
+    # Connect to the first resource in the list, or specify the correct address if multiple are available
+    instrument_address = resources[0]
+    oscilloscope = rm.open_resource(instrument_address)
 
-    # Kontrollera att vi är anslutna till rätt instrument genom att fråga om ID
-    idn = oscilloskop.query("*IDN?")
-    print(f"Ansluten till: {idn}")
+    # Verify we are connected to the correct instrument by asking for its ID
+    idn = oscilloscope.query("*IDN?")
+    print(f"Connected to: {idn}")
 
-    # Ställ in timeout och avslutning för kommunikation
-    oscilloskop.timeout = 5000
-    oscilloskop.write_termination = "\n"
-    oscilloskop.read_termination = "\n"
+    # Set timeout and termination for communication
+    oscilloscope.timeout = 5000
+    oscilloscope.write_termination = "\n"
+    oscilloscope.read_termination = "\n"
 
-    return oscilloskop
+    return oscilloscope
 
 
 # -------------------------------------------------------------
-# Block 2: Mätning
+# Block 2: Measurement
 # -------------------------------------------------------------
-def mata(oscilloskop, kanal="CHANnel1"):
-    # Mät frekvensen från en specifik kanal på oscilloskopets mätfunktion
+def measure(oscilloscope, channel="CHANnel1"):
+    # Measure the frequency from a specific channel using the oscilloscope's measurement function
     try:
-        # set-kommando: specifik kanal
-        oscilloskop.write(f":MEASure:FREQuency {kanal}")
-        # query-kommando:
-        frekvens = oscilloskop.query(f":MEASure:FREQuency? {kanal}")
-        return float(frekvens)
+        # Set command: specific channel
+        oscilloscope.write(f":MEASure:FREQuency {channel}")
+        # Query command:
+        frequency = oscilloscope.query(f":MEASure:FREQuency? {channel}")
+        return float(frequency)
     except Exception as e:
-        print(f"Misslyckades med att mäta frekvens på {kanal}: {e}")
+        print(f"Failed to measure frequency on {channel}: {e}")
         return None
 
 
 # -------------------------------------------------------------
-# Block 3: Hämta signaldata
+# Block 3: Fetch signal data
 # -------------------------------------------------------------
-def hamta_signal(oscilloskop, kanal="CHANnel1"):
-    # Hämta signaldata från den specifika kanalen
+def fetch_signal(oscilloscope, channel="CHANnel1"):
+    # Fetch signal data from the specified channel
     try:
-        oscilloskop.write(f":WAVeform:FORMat ASCii")  # Sätt formatet till ASCII
-        oscilloskop.write(f":WAVeform:SOURCE {kanal}")  # Välj kanal
+        oscilloscope.write(f":WAVeform:FORMat ASCii")  # Set format to ASCII
+        oscilloscope.write(f":WAVeform:SOURCE {channel}")  # Select channel
 
-        # Hämta waveform-data
-        data = oscilloskop.query(":WAVeform:DATA?")
+        # Fetch waveform data
+        data = oscilloscope.query(":WAVeform:DATA?")
         
-        # Rensa data-strängen genom att ta bort oönskade tecken
+        # Clean up the data string by removing unwanted characters
         signal = np.array([float(point) for point in data.split() if point.replace('.', '', 1).replace('-', '', 1).isdigit()])
 
-        # Hämta tidsbasen
-        x_increment = float(oscilloskop.query(":WAVeform:XINCrement?"))
-        x_origin = float(oscilloskop.query(":WAVeform:XORigin?"))
+        # Fetch the time base
+        x_increment = float(oscilloscope.query(":WAVeform:XINCrement?"))
+        x_origin = float(oscilloscope.query(":WAVeform:XORigin?"))
         num_points = len(signal)
 
-        # Generera x-värden baserat på tidsbasen
+        # Generate x-values based on the time base
         time_array = np.arange(num_points) * x_increment + x_origin
 
         return time_array, signal
     except Exception as e:
-        print(f"Misslyckades med att hämta signal: {e}")
+        print(f"Failed to fetch signal: {e}")
         return None, None
 
 
 # -------------------------------------------------------------
-# Block 4: Analysera
+# Block 4: Analyze
 # -------------------------------------------------------------
-def analysera(frekvens):
-    # Analysera den uppmätta frekvensen
-    print("\n--- Analysera data ---")
-    print(f"Uppmätt frekvens: {frekvens} Hz")
+def analyze(frequency):
+    # Analyze the measured frequency
+    print("\n--- Analyze data ---")
+    print(f"Measured frequency: {frequency} Hz")
 
 
 # -------------------------------------------------------------
-# Huvudprogram
+# Create dynamic folder
+# -------------------------------------------------------------
+def create_folder():
+    timestamp = time.strftime("%Y%m%d_%H%M%S")  # Format: YYYYMMDD_HHMMSS
+    folder_name = f'/var/lib/jenkins/jobs/testauto/images/signal_data_{timestamp}'
+    
+    # Create the folder if it doesn't already exist
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+    
+    return folder_name
+
+
+# -------------------------------------------------------------
+# Main program
 # -------------------------------------------------------------
 def main():
-    # Block 1: Initialisera
+    # Block 1: Initialize
     try:
-        oscilloskop = initialisera()
+        oscilloscope = initialize()
     except Exception as e:
-        print(f"Initialisering misslyckades: {e}")
+        print(f"Initialization failed: {e}")
         return
 
+    # Create a folder to save the images
+    folder_path = create_folder()
+
+    # Block 2: Measure frequency and save to list
     for i in range(3):
-        # Block 2: Mätning
         try:
-            kanal = "CHANnel1"  # Specifik kanal 1
-            frekvens = mata(oscilloskop, kanal=kanal)  # Använd kanal 1 för frekvensmätning
-            if frekvens is not None:
-                frekvens_lista.append(frekvens)
+            channel = "CHANnel1"  # Specific channel 1
+            frequency = measure(oscilloscope, channel=channel)  # Use channel 1 for frequency measurement
+            if frequency is not None:
+                frequency_list.append(frequency)
         except Exception as e:
-            print(f"Mätning misslyckades: {e}")
+            print(f"Measurement failed: {e}")
             return
         time.sleep(1)
 
-    print(frekvens_lista)
+    print(frequency_list)
 
-    # Block 3: Hämta och spara signal som bild
-    time_array, signal = hamta_signal(oscilloskop, kanal)
-    if signal is not None:
+    # Block 3: Fetch and save signal from channel 1 (sine wave)
+    time_array_channel1, signal_channel1 = fetch_signal(oscilloscope, "CHANnel1")
+    if signal_channel1 is not None:
         plt.figure()
-        plt.plot(time_array, signal)
-        plt.title(f"Signal från {kanal}")
-        plt.xlabel("Tid (s)")
+        plt.plot(time_array_channel1, signal_channel1)
+        plt.title("Sine wave from Channel 1")
+        plt.xlabel("Time (s)")
         plt.ylabel("Amplitude")
         plt.grid()
 
-        # Generera ett unikt filnamn med nuvarande tidsstämpel
-        timestamp = time.strftime("%Y%m%d_%H%M%S")  # Format: YYYYMMDD_HHMMSS
-        save_path = f'/var/lib/jenkins/jobs/testauto/images/signal_plot_{timestamp}.png'  # Unikt filnamn
+        # Save plot for channel 1
+        save_path_channel1 = os.path.join(folder_path, f'sine_plot_{time.strftime("%Y%m%d_%H%M%S")}.png')
+        plt.savefig(save_path_channel1, dpi=300)
+        print(f"Sine plot saved to: {save_path_channel1}")
+        plt.close()
 
-        # Skriv ut spara sökväg för debugging
-        print(f"Sparar plot till: {save_path}")
+    # Block 3: Fetch and save signal from channel 2 (PWM signal)
+    time_array_channel2, signal_channel2 = fetch_signal(oscilloscope, "CHANnel2")
+    if signal_channel2 is not None:
+        plt.figure()
+        plt.plot(time_array_channel2, signal_channel2)
+        plt.title("PWM signal from Channel 2")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Amplitude")
+        plt.grid()
 
-        # Försök spara figuren
-        try:
-            plt.savefig(save_path, dpi=300)  # Spara som PNG-fil med 300 dpi
-            print(f"Plot sparad framgångsrikt till: {save_path}")
-        except Exception as e:
-            print(f"Misslyckades med att spara plot: {e}")
-        plt.close()  # Stäng plotten för att frigöra minne
+        # Save plot for channel 2
+        save_path_channel2 = os.path.join(folder_path, f'pwm_plot_{time.strftime("%Y%m%d_%H%M%S")}.png')
+        plt.savefig(save_path_channel2, dpi=300)
+        print(f"PWM plot saved to: {save_path_channel2}")
+        plt.close()
 
-    # Block 4: Analysera
-    if frekvens is not None:
-        analysera(frekvens)
-
-    # Stäng anslutningen till oscilloskopet
-    oscilloskop.close()
+    # Block 4: Close the connection to the oscilloscope
+    oscilloscope.close()
 
 
 if __name__ == "__main__":
