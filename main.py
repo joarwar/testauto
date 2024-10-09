@@ -72,9 +72,9 @@ def fetch_signal(oscilloscope, channel):
             print(f"No data received from {channel}.")
             return None, None
         else:
-            print(f"Data received from {channel}: {data[:100]}...")  # Print first 100 characters for debugging
+            print(f"Data received from {channel}: {data}")  # Print entire data for debugging
 
-        # Clean up the data string by removing unwanted characters
+        # Clean up the data string by splitting and removing unwanted characters
         signal_data = data.split()
 
         # Check if the first element is a metadata header, and skip it if so
@@ -82,7 +82,12 @@ def fetch_signal(oscilloscope, channel):
             signal_data = signal_data[1:]  # Ignore the first element
 
         # Convert remaining parts to floats
-        signal = np.array([float(point) for point in signal_data if point.replace('.', '', 1).replace('-', '', 1).isdigit()])
+        # This includes additional checks for float conversion
+        try:
+            signal = np.array([float(point) for point in signal_data])
+        except ValueError as e:
+            print(f"Error converting signal data to float for {channel}: {e}")
+            return None, None
 
         if len(signal) == 0:
             print(f"Parsed signal is empty for {channel}")
@@ -100,7 +105,6 @@ def fetch_signal(oscilloscope, channel):
     except Exception as e:
         print(f"Failed to fetch signal from {channel}: {e}")
         return None, None
-
 
 # -------------------------------------------------------------
 # Create dynamic folder
