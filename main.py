@@ -104,7 +104,7 @@ def fetch_signal(oscilloscope, channel):
             if abs(average) < 0.1:  # Set a tolerance level for offset
                 print(f"{channel} signal appears to be centered around zero, indicating a good sine wave.")
             else:
-                print(f"{channel} signal has a DC offset of {average}. This may indicate an issue.")
+                print(f"{channel} signal has a DC offset of {average}.")
 
             # Check if the amplitude is reasonable (e.g., if the max value is significantly above zero)
             if np.max(signal) > 0:  # You can adjust this condition based on expected signal behavior
