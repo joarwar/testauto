@@ -71,8 +71,6 @@ def fetch_signal(oscilloscope, channel):
         if not data:
             print(f"No data received from {channel}.")
             return None, None
-        else:
-            print(f"Data received from {channel}: {data}")  # Print entire data for debugging
 
         # Clean up the data string by splitting and removing unwanted characters
         signal_data = data.split()
@@ -98,7 +96,6 @@ def fetch_signal(oscilloscope, channel):
         # Check if channel is CHANnel1
         if channel == "CHANnel1":
             unique_values = np.unique(signal)
-            print(f"Unique values for {channel}: {unique_values}")
 
             # Check if all points are equal
             if len(unique_values) == 1:
