@@ -99,7 +99,7 @@ def fetch_signal(oscilloscope, channel):
             average = np.mean(signal)  # Calculate the average to check for DC offset
             print(f"The sum of all points in {channel} is: {total_sum}")
             print(f"The average of all points in {channel} is: {average}")
-            sum_sinus_number = average - total_sum
+            sum_sinus_number = average - average
             print(f"The sum of the sinus is {sum_sinus_number} after removing the DC offset.")
             # Analyze if the sine wave is good based on the average value
             if abs(average) < 0.1:  # Set a tolerance level for offset
@@ -110,6 +110,8 @@ def fetch_signal(oscilloscope, channel):
             # Check if the amplitude is reasonable (e.g., if the max value is significantly above zero)
             if np.max(signal) > 0:  # You can adjust this condition based on expected signal behavior
                 print(f"{channel} signal has positive amplitude, indicating potential offset.")
+            
+            print(f"The sum of the sinus is {sum_sinus_number} after removing the DC offset.")
 
         # Fetch the time base
         x_increment = float(oscilloscope.query(":WAVeform:XINCrement?"))
